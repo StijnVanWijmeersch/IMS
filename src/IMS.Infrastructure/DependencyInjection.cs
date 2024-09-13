@@ -21,6 +21,7 @@ using IMS.Infrastructure.Products;
 using IMS.Infrastructure.Users;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Quartz;
 
@@ -41,7 +42,7 @@ public static class DependencyInjection
         var credentials = new ClientSecretCredential(directoryId.Value, clientId.Value, clientSecret.Value);
         var uri = new Uri(keyVaultURL.Value!);
 
-        //builder.Configuration.AddAzureKeyVault(uri, credentials);
+        builder.Configuration.AddAzureKeyVault(uri, credentials);
 
         var client = new SecretClient(uri, credentials);
 
@@ -50,10 +51,10 @@ public static class DependencyInjection
             var domainEventInterceptor = sp.GetRequiredService<ConvertDomainEventToOutboxMessageInterceptor>();
             var softDeleteInterceptor = sp.GetRequiredService<SoftDeleteInterceptor>();
 
-            //var database = client.GetSecret("Database").Value.Value;
+            var database = client.GetSecret("Database").Value.Value;
 
             options
-            .UseSqlServer(@"Data Source=DOTNOVATEROOT\SQLEXPRESS;Initial Catalog=PosDemoDb;Integrated Security=True;Encrypt=True;Trust Server Certificate=True")
+            .UseSqlServer(database)
             .AddInterceptors(domainEventInterceptor, softDeleteInterceptor);
         });
 
